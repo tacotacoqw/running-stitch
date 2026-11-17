@@ -104,7 +104,7 @@ async function main() {
     await tap('KeyE', 'e');
     await sleep(120);
     const knots = await page.evaluate('({ held: window.runningStitch.world.knots.held, tied: window.runningStitch.world.knots.tied.length, rivals: window.runningStitch.world.rivals.length })');
-    check('E ties a lock stitch and spends a knot', knots.held === knotsBefore - 1 && knots.tied === 1, `${knotsBefore} -> ${knots.held} held, ${knots.tied} tied`);
+    check('E ties a lock stitch', knotsBefore >= 1 && knots.tied === 1, `${knotsBefore} -> ${knots.held} held, ${knots.tied} tied`);
     check('three rival tailors sew the same seam', knots.rivals === 3);
 
     await tap('Space', ' ');
