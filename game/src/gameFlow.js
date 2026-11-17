@@ -2,17 +2,17 @@
 // pause, haberdashery) and the game-over and victory screens with their restart. It also keeps
 // the save: best score, thimbles, workshop upgrades and badges.
 
-import { createAutopilot, steerAutopilot } from './autopilot.js';
-import { STEP_SECONDS } from './config.js';
-import { commissionCardAt } from './render/orderBookScreen.js';
-import { notionCardAt } from './render/screens.js';
-import { benchCardAt } from './render/workshopScreen.js';
-import { loadSave, storeSave } from './storage.js';
+import { chooseNotion, createWorld, stepWorld, takeCommission } from './world.js';
+import { buyBenchUpgrade, fitWorkshopUpgrades, thimblesEarned } from './systems/workshop.js';
 import { awardBadges } from './systems/badges.js';
 import { dailySeed } from './systems/dailyRun.js';
 import { summarizeRun } from './systems/scoring.js';
-import { buyBenchUpgrade, fitWorkshopUpgrades, thimblesEarned } from './systems/workshop.js';
-import { chooseNotion, createWorld, stepWorld, takeCommission } from './world.js';
+import { createAutopilot, steerAutopilot } from './autopilot.js';
+import { STEP_SECONDS } from './config.js';
+import { loadSave, storeSave } from './storage.js';
+import { commissionCardAt } from './render/orderBookScreen.js';
+import { notionCardAt } from './render/screens.js';
+import { benchCardAt } from './render/workshopScreen.js';
 
 export function createGame(seed) {
   const game = {

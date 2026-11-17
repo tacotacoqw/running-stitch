@@ -1,11 +1,13 @@
 // Running Stitch entry point: sets up the canvas, runs the fixed-step loop and paints each frame.
 
-import { createWorkshopTune } from './audio/workshopTune.js';
-import { createSoundEffects } from './audio/soundEffects.js';
+// The game's rules come first (the run, its order book, rivals, hazards, the workshop career),
+// then what draws and sounds them.
+import { createGame, handleMenuInput, stepGame } from './gameFlow.js';
 import { createAutopilot, steerAutopilot } from './autopilot.js';
 import { STEP_SECONDS, VIEW } from './config.js';
-import { createGame, handleMenuInput, stepGame } from './gameFlow.js';
 import { createInput } from './input.js';
+import { createWorkshopTune } from './audio/workshopTune.js';
+import { createSoundEffects } from './audio/soundEffects.js';
 import { paintTable } from './render/fabric.js';
 import { paintHud } from './render/hud.js';
 import { paintOrderBookScreen } from './render/orderBookScreen.js';

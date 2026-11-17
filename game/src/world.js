@@ -2,19 +2,19 @@
 // pick a commission from the order book, sew it, pick a notion at the haberdashery, and on to
 // the next order. Win by sewing all six; lose with no needles or no thread.
 
-import { NEEDLE } from './config.js';
-import { createRng } from './core/rng.js';
-import { buyNotion, createKit, rollNotionChoices } from './data/notions.js';
+import { commissionsOnOffer, ORDERS_IN_A_RUN, writeOrderBook } from './systems/orderBook.js';
+import { updateSeamRipper } from './entities/seamRipper.js';
+import { updateRivals } from './entities/rivals.js';
 import { updateHazards } from './entities/hazards.js';
 import { tieLockStitch } from './entities/lockStitch.js';
+import { buyNotion, createKit, rollNotionChoices } from './data/notions.js';
+import { garmentBonus, ribbonFor } from './systems/scoring.js';
+import { layGarment } from './systems/layGarment.js';
 import { driveNeedle } from './entities/needle.js';
-import { updateRivals } from './entities/rivals.js';
-import { updateSeamRipper } from './entities/seamRipper.js';
 import { layStitches, sewButtonsAndBobbins } from './entities/stitching.js';
 import { updateParticles } from './effects/particles.js';
-import { layGarment } from './systems/layGarment.js';
-import { commissionsOnOffer, ORDERS_IN_A_RUN, writeOrderBook } from './systems/orderBook.js';
-import { garmentBonus, ribbonFor } from './systems/scoring.js';
+import { NEEDLE } from './config.js';
+import { createRng } from './core/rng.js';
 
 // phase: 'orderBook' | 'sewing' | 'haberdashery' | 'gameOver' | 'victory'
 export function createWorld(seed) {
