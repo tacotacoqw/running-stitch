@@ -1,0 +1,31 @@
+/* Running Stitch page shell: a dark wood surround with the game canvas centred in it. */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #4a3020;
+}
+
+#sewing-table {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game {
+  display: block;
+  background: #b98a5e;
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#needs-script {
+  color: #fbf3e0;
+  font: 600 18px system-ui, sans-serif;
+  text-align: center;
+}
