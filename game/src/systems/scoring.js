@@ -2,6 +2,7 @@
 // neatness, ribbons and the end-of-run summary.
 
 import { CHAIN, PEDAL, REWARD, RIBBONS, STITCH } from '../config.js';
+import { finishingPlace, podiumBonus } from './standings.js';
 
 export function rateStitch(world, wobble) {
   const give = world.kit.precision * world.rules.precision;
@@ -59,7 +60,9 @@ export function garmentBonus(world) {
   const neat = Math.round(Math.round(neatness * 100) * REWARD.neatnessPerPercent * order * world.rules.neatBonus * scale);
   const needles = Math.round(world.needles.left * REWARD.needleLeft * scale);
   const thread = Math.round((world.thread.left / world.thread.capacity) * 300 * scale);
-  return { neatness, neat, needles, thread, total: neat + needles + thread };
+  const place = finishingPlace(world);
+  const podium = podiumBonus(world, place);
+  return { neatness, neat, needles, thread, place, podium, total: neat + needles + thread + podium };
 }
 
 export function summarizeRun(world) {
@@ -72,6 +75,8 @@ export function summarizeRun(world) {
     ribbon: ribbonFor(meanNeatness),
     bestChain: world.chain.best,
     buttons: world.stats.buttons,
+    wins: world.stats.wins,
+    podiums: world.stats.podiums,
     stitches: world.stats.stitches,
   };
 }

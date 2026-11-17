@@ -3,6 +3,7 @@
 
 import { RIPPER, STITCH } from '../config.js';
 import { seamPointAt } from '../core/seamPath.js';
+import { holdRipperAtKnots } from './lockStitch.js';
 import { bendNeedle } from './needle.js';
 
 export function updateSeamRipper(world, dt) {
@@ -21,7 +22,10 @@ export function updateSeamRipper(world, dt) {
   }
   if (ripper.grandmaster) throwPinsAhead(world, dt);
 
-  ripper.at += (ripper.speed / STITCH.length) * dt;
+  ripper.gnawing = false;
+  const reach = ripper.at + (ripper.speed / STITCH.length) * dt;
+  ripper.at = holdRipperAtKnots(world, reach, dt);
+  if (ripper.at < reach) ripper.gnawing = true;
   const reached = Math.min(stitches.length - 1, Math.floor(ripper.at));
   for (let i = Math.max(0, reached - 3); i < reached; i++) stitches[i].ripped = true;
 

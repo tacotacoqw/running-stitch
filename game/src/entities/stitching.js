@@ -4,6 +4,7 @@
 import { INK, REWARD, STITCH, THREAD } from '../config.js';
 import { spawnBurst, spawnFloatingWord } from '../effects/particles.js';
 import { chainMultiplier, rateStitch, scoreStitch } from '../systems/scoring.js';
+import { earnKnot } from './lockStitch.js';
 import { isHopping } from './needle.js';
 
 export function layStitches(world) {
@@ -39,6 +40,7 @@ export function sewButtonsAndBobbins(world) {
       const points = Math.round(REWARD.button * world.kit.buttonScale * world.rules.buttons * world.commission.pay * chainMultiplier(world));
       world.score += points;
       world.stats.buttons += 1;
+      earnKnot(world);
       world.sounds.push('button');
       spawnBurst(world, button.x, button.y, INK.mustard, 14, 200);
       spawnFloatingWord(world, button.x, button.y - 18, `button +${points}`, INK.teal, 20);

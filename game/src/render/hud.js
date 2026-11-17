@@ -9,6 +9,8 @@ import { grandmasterResolve } from '../entities/seamRipper.js';
 import { ORDERS_IN_A_RUN, orderNumber } from '../systems/orderBook.js';
 import { chainMultiplier, neatnessOf, paceMultiplier, ribbonFor } from '../systems/scoring.js';
 import { formatScore, paintBar, paintKeycap, paintPaper, paintText, paintWrappedText } from './paint.js';
+import { LOCK_STITCH } from '../entities/lockStitch.js';
+import { paintStandingsPanel } from './standingsPanel.js';
 import { paintBobbin, paintButton, paintIron, paintPin, paintRosette, paintScissors, paintSeamRipper } from './sprites.js';
 
 const LEFT = { x: 14, width: 220 };
@@ -22,6 +24,7 @@ export function paintHud(ctx, world, status, time) {
   paintScore(ctx, world, status.bestScore);
   paintOnTheClothPanel(ctx, world);
   paintChainPanel(ctx, world);
+  paintStandingsPanel(ctx, world, RIGHT, CLOTH.top);
   paintNotionsPanel(ctx, world);
   paintThreadPanel(ctx, world);
   paintPedalPanel(ctx, world);
@@ -175,18 +178,19 @@ function paintChainPanel(ctx, world) {
 }
 
 function paintNotionsPanel(ctx, world) {
-  const top = CLOTH.top;
+  const top = CLOTH.top + 180;
   const owned = listOwnedNotions(world);
-  paintPaper(ctx, RIGHT.x, top, RIGHT.width, 250);
+  paintPaper(ctx, RIGHT.x, top, RIGHT.width, 150);
   paintTitle(ctx, RIGHT, top, 'NOTIONS', `${owned.length} of ${NOTIONS.length}`);
   if (owned.length === 0) {
-    paintWrappedText(ctx, 'Finish a garment to visit the haberdashery and pick your first notion.', RIGHT.x + RIGHT.width / 2, top + 62, RIGHT.width - 36, 20, {
+    paintWrappedText(ctx, 'Finish a garment to pick your first notion at the haberdashery.', RIGHT.x + RIGHT.width / 2, top + 60, RIGHT.width - 36, 20, {
       size: 14, weight: 600, color: INK.textSoft,
     });
     return;
   }
-  owned.slice(0, 7).forEach((notion, index) => {
-    const y = top + 56 + index * 27;
+  if (owned.length > 4) paintText(ctx, `and ${owned.length - 4} more`, RIGHT.x + RIGHT.width - 14, top + 142, { size: 11, weight: 800, color: INK.textSoft, align: 'right' });
+  owned.slice(0, 4).forEach((notion, index) => {
+    const y = top + 54 + index * 24;
     paintText(ctx, notion.name, RIGHT.x + 14, y, { size: 15, weight: 800 });
     for (let pip = 0; pip < notion.limit; pip++) {
       ctx.fillStyle = pip < notion.level ? INK.teal : 'rgba(58, 42, 32, 0.18)';
@@ -196,18 +200,18 @@ function paintNotionsPanel(ctx, world) {
 }
 
 function paintThreadPanel(ctx, world) {
-  const top = CLOTH.top + 262;
-  paintPaper(ctx, RIGHT.x, top, RIGHT.width, 112);
+  const top = CLOTH.top + 342;
+  paintPaper(ctx, RIGHT.x, top, RIGHT.width, 104);
   const share = world.thread.left / world.thread.capacity;
   const low = share < 0.25;
   paintTitle(ctx, RIGHT, top, 'THREAD', low ? 'LOW!' : 'empty = lose');
-  paintBobbin(ctx, RIGHT.x + 32, top + 64, world.garment.thread, 1.5);
-  paintText(ctx, `${Math.round(share * 100)}%`, RIGHT.x + 62, top + 76, { size: 34, weight: 900, color: low ? INK.red : INK.text });
-  paintBar(ctx, RIGHT.x + 14, top + 92, RIGHT.width - 28, 9, share, low ? INK.red : INK.navy);
+  paintBobbin(ctx, RIGHT.x + 30, top + 58, world.garment.thread, 1.3);
+  paintText(ctx, `${Math.round(share * 100)}%`, RIGHT.x + 58, top + 70, { size: 30, weight: 900, color: low ? INK.red : INK.text });
+  paintBar(ctx, RIGHT.x + 14, top + 84, RIGHT.width - 28, 9, share, low ? INK.red : INK.navy);
 }
 
 function paintPedalPanel(ctx, world) {
-  const top = CLOTH.top + 386;
+  const top = CLOTH.top + 458;
   const height = CLOTH.bottom - top;
   const needle = world.needle;
   paintPaper(ctx, RIGHT.x, top, RIGHT.width, height);
@@ -225,30 +229,42 @@ function paintPedalPanel(ctx, world) {
   paintBar(ctx, RIGHT.x + 14, top + 78, RIGHT.width - 28, 7, needle.speed / PEDAL.fast.speed, INK.red);
 
   const [word, color] = RATING_WORDS[needle.lastRating];
-  paintText(ctx, 'LAST STITCH', RIGHT.x + 14, top + 112, { size: 12, weight: 800, color: INK.textSoft, spacing: 2 });
-  paintText(ctx, word, RIGHT.x + 14, top + 138, { size: 24, weight: 900, color });
+  paintText(ctx, word, RIGHT.x + RIGHT.width - 14, top + 104, { size: 14, weight: 900, color, align: 'right' });
+  paintText(ctx, 'STITCH', RIGHT.x + 14, top + 104, { size: 12, weight: 800, color: INK.textSoft, spacing: 2 });
 
   const gap = ripperGap(world);
   const close = gap < 120;
-  paintText(ctx, 'RIPPER', RIGHT.x + 14, top + 170, { size: 12, weight: 800, color: INK.textSoft, spacing: 2 });
-  paintText(ctx, gap === Infinity ? 'asleep' : close ? 'RIGHT BEHIND YOU!' : `${Math.round(gap)}px behind`, RIGHT.x + RIGHT.width - 14, top + 170, {
+  const gnawing = world.ripper.gnawing;
+  paintText(ctx, 'RIPPER', RIGHT.x + 14, top + 128, { size: 12, weight: 800, color: INK.textSoft, spacing: 2 });
+  paintText(ctx, gap === Infinity ? 'asleep' : gnawing ? 'gnawing a knot' : close ? 'RIGHT BEHIND YOU!' : `${Math.round(gap)}px behind`, RIGHT.x + RIGHT.width - 14, top + 128, {
     size: 13, weight: 900, color: close ? INK.red : INK.text, align: 'right',
   });
-  paintBar(ctx, RIGHT.x + 14, top + 180, RIGHT.width - 28, 9, gap === Infinity ? 1 : gap / 500, close ? INK.red : INK.teal);
-  paintText(ctx, 'brake too long and it bends a needle', RIGHT.x + 14, top + 208, { size: 11, weight: 700, color: INK.textSoft });
+  paintBar(ctx, RIGHT.x + 14, top + 138, RIGHT.width - 28, 9, gap === Infinity ? 1 : gap / 500, close ? INK.red : INK.teal);
 }
 
 function paintControlsLegend(ctx, world, muted) {
   const y = CLOTH.bottom + 22;
   paintKeycap(ctx, 14, y, 'MOUSE / A D', 'STEER');
-  paintKeycap(ctx, 196, y, 'HOLD CLICK / W', 'FLAT OUT');
-  paintKeycap(ctx, 436, y, 'HOLD RIGHT-CLICK / S', 'BRAKE');
-  const hopX = paintKeycap(ctx, 700, y, 'SPACE', 'HOP');
+  paintKeycap(ctx, 188, y, 'CLICK / W', 'FLAT OUT');
+  paintKeycap(ctx, 378, y, 'R-CLICK / S', 'BRAKE');
+  const hopX = paintKeycap(ctx, 556, y, 'SPACE', 'HOP');
   const cooldown = NEEDLE.hopCooldown * world.kit.hopCooldownScale;
-  paintBar(ctx, hopX + 8, y + 9, 60, 8, 1 - world.needle.hopCooldown / cooldown, INK.mustard, 'rgba(255, 255, 255, 0.35)');
-  paintKeycap(ctx, 900, y, 'P', 'PAUSE');
-  paintKeycap(ctx, 1010, y, 'R', 'RESTART');
-  paintKeycap(ctx, 1136, y, 'M', muted ? 'MUTED' : 'SOUND');
+  paintBar(ctx, hopX + 8, y + 9, 46, 8, 1 - world.needle.hopCooldown / cooldown, INK.mustard, 'rgba(255, 255, 255, 0.35)');
+
+  // The lock stitch and the knots held for it: sew buttons to earn more.
+  const knotX = paintKeycap(ctx, 716, y, 'E', 'LOCK STITCH', world.knots.held > 0 ? INK.paper : 'rgba(251, 243, 224, 0.5)');
+  for (let knot = 0; knot < LOCK_STITCH.maxKnots; knot++) {
+    ctx.beginPath();
+    ctx.arc(knotX + 16 + knot * 18, y + 13, 6.5, 0, Math.PI * 2);
+    ctx.fillStyle = knot < world.knots.held ? INK.mustard : 'rgba(255, 255, 255, 0.25)';
+    ctx.fill();
+    ctx.strokeStyle = INK.text;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  paintKeycap(ctx, 936, y, 'P', 'PAUSE');
+  paintKeycap(ctx, 1034, y, 'R', 'RESTART');
+  paintKeycap(ctx, 1154, y, 'M', muted ? 'MUTE' : 'SOUND');
 }
 
 function paintGarmentBanner(ctx, world) {

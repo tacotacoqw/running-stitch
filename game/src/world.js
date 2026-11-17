@@ -6,7 +6,9 @@ import { NEEDLE } from './config.js';
 import { createRng } from './core/rng.js';
 import { buyNotion, createKit, rollNotionChoices } from './data/notions.js';
 import { updateHazards } from './entities/hazards.js';
+import { tieLockStitch } from './entities/lockStitch.js';
 import { driveNeedle } from './entities/needle.js';
+import { updateRivals } from './entities/rivals.js';
 import { updateSeamRipper } from './entities/seamRipper.js';
 import { layStitches, sewButtonsAndBobbins } from './entities/stitching.js';
 import { updateParticles } from './effects/particles.js';
@@ -26,7 +28,9 @@ export function createWorld(seed) {
     orderBook: writeOrderBook(rng),
     needles: { left: NEEDLE.startNeedles, max: NEEDLE.startNeedles },
     chain: { count: 0, best: 0 },
-    stats: { stitches: 0, buttons: 0, hops: 0 },
+    stats: { stitches: 0, buttons: 0, hops: 0, knots: 0, wins: 0, podiums: 0 },
+    knots: { held: 1, tied: [] },
+    rivals: [],
     kit: createKit(),
     notionChoices: [],
     finished: [],
@@ -60,6 +64,8 @@ export function stepWorld(world, controls, dt) {
   world.hurtFlash = Math.max(0, world.hurtFlash - dt);
 
   driveNeedle(world, controls, dt);
+  if (controls.knot) tieLockStitch(world);
+  updateRivals(world, dt);
   layStitches(world);
   sewButtonsAndBobbins(world);
   updateHazards(world, dt);
@@ -73,7 +79,10 @@ function finishGarment(world) {
   const bonus = garmentBonus(world);
   world.score += bonus.total;
   world.lastBonus = bonus;
+  if (bonus.place === 1) world.stats.wins += 1;
+  if (bonus.place <= 3) world.stats.podiums += 1;
   world.finished.push({
+    place: bonus.place,
     name: world.garment.name,
     fabric: world.garment.fabric,
     thread: world.garment.thread,

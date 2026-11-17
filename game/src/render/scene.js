@@ -5,7 +5,9 @@
 import { CLOTH, INK, STITCH, VIEW } from '../config.js';
 import { scissorsAreShut, SCISSORS_CYCLE } from '../entities/hazards.js';
 import { paintCloth, paintTable, fabricPattern } from './fabric.js';
-import { paintText } from './paint.js';
+import { seamPointAt } from '../core/seamPath.js';
+import { LOCK_STITCH } from '../entities/lockStitch.js';
+import { FONT_STACK, paintText } from './paint.js';
 import { paintBobbin, paintButton, paintIron, paintNeedle, paintPin, paintRosette, paintScissors, paintSeamRipper } from './sprites.js';
 
 const RATING_RING = { perfect: INK.teal, good: INK.mustard, sloppy: '#e07a2f', off: INK.red };
@@ -44,6 +46,8 @@ export function paintScene(ctx, world, time) {
   }
   for (const scissors of world.scissors) paintScissors(ctx, scissors.x, scissors.y, scissors.angle, scissorsOpenness(scissors));
   if (world.iron) paintIron(ctx, world.iron.x, world.iron.y, 1, time);
+  paintLockStitches(ctx, world);
+  paintRivals(ctx, world);
   paintRipperAndNeedle(ctx, world, time);
   paintEffects(ctx, world);
   ctx.restore();
@@ -143,6 +147,80 @@ export function paintStitches(ctx, stitches, threadColor, width) {
   ctx.fillStyle = 'rgba(30, 14, 4, 0.4)';
   for (const stitch of stitches) {
     if (stitch.ripped) ctx.fillRect(stitch.ax - 1, stitch.ay - 1, 2.5, 2.5);
+  }
+}
+
+// Each rival tailor: a short run of their own thread beside the chalk line, their needle in
+// their colour, and a name flag.
+function paintRivals(ctx, world) {
+  const points = world.path.points;
+  for (const rival of world.rivals) {
+    const at = Math.floor(rival.index);
+    const spot = seamPointAt(world.path, at);
+    const sideX = -Math.sin(spot.angle) * rival.lane * 9;
+    const sideY = Math.cos(spot.angle) * rival.lane * 9;
+    ctx.beginPath();
+    for (let i = Math.max(0, at - 44); i <= at; i += 2) {
+      if (i === Math.max(0, at - 44)) ctx.moveTo(points[i].x + sideX, points[i].y + sideY);
+      else ctx.lineTo(points[i].x + sideX, points[i].y + sideY);
+    }
+    ctx.setLineDash([7, 5]);
+    ctx.strokeStyle = rival.tailor.color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const x = spot.x + sideX;
+    const y = spot.y + sideY;
+    ctx.beginPath();
+    ctx.arc(x, y, 9, 0, Math.PI * 2);
+    ctx.fillStyle = rival.tailor.color;
+    ctx.fill();
+    ctx.strokeStyle = INK.paper;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = INK.paper;
+    ctx.fill();
+
+    const flag = rival.fumble > 0 ? 'fumble!' : rival.finishedAt !== null ? `${rival.tailor.name}: done` : rival.tailor.name;
+    ctx.font = `800 11px ${FONT_STACK}`;
+    const width = ctx.measureText(flag).width + 10;
+    ctx.beginPath();
+    ctx.roundRect(x - width / 2, y - 29, width, 16, 5);
+    ctx.fillStyle = rival.tailor.color;
+    ctx.fill();
+    paintText(ctx, flag, x, y - 17, { size: 11, weight: 800, color: '#ffffff', align: 'center' });
+  }
+}
+
+// A knot of the lock stitch: a little bow on the seam, ringed while it still holds the ripper.
+function paintLockStitches(ctx, world) {
+  for (const knot of world.knots.tied) {
+    ctx.save();
+    ctx.translate(knot.x, knot.y);
+    ctx.fillStyle = world.garment.thread;
+    ctx.strokeStyle = INK.text;
+    ctx.lineWidth = 1.5;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(side * 7, -1, 7, 4.5, side * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    if (knot.holds > 0) {
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, -Math.PI / 2, -Math.PI / 2 + (knot.holds / LOCK_STITCH.holdsSeconds) * Math.PI * 2);
+      ctx.strokeStyle = INK.navy;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 }
 

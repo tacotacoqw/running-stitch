@@ -22,9 +22,12 @@ node serve.ts   # then open http://localhost:8080 in desktop Chrome
 | Flat out | Hold click or W: twice the points, wider turns |
 | Brake | Hold right-click or S: wait out a hazard, while the ripper gains on you |
 | Hop | Space: lift the needle over a pin |
+| Lock stitch | E: spend a knot to hold the seam ripper back |
 | Pause / restart / sound | P, R, M |
 
 - **A run is six orders.** At each stop the order book offers two commissions drawn from a catalogue of twelve patterns: the harder garment pays more. The sixth is always the royal commission, sewn with the Grandmaster Ripper throwing pins ahead of you.
+- **Three rival tailors** sew every order beside you on the same pattern. Live standings show the gaps, and your place on the podium pays a bonus.
+- **The lock stitch** (E): every button you sew on earns a knot. Tie one off and the seam ripper has to gnaw through it before it can go on.
 - **Six fabrics** each change how a garment sews: jersey forgives a wobble but eats thread, denim turns wide, velvet runs fast, dotted cotton builds the chain twice as quickly.
 - **Win** by sewing all six orders to their END marks. **Lose** when the last needle bends or the spool runs out of thread.
 - **Stitches** are rated perfect, good, sloppy or off the line. Perfect and good ones build a chain worth up to four times the points.

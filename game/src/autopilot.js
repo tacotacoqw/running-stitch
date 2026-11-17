@@ -37,6 +37,8 @@ export function steerAutopilot(pilot, world) {
       if (!onTop && Math.hypot(iron.x - soon.x, iron.y - soon.y) < iron.radius + 22) controls.brake = true;
     }
   }
+  // Tie a lock stitch when the ripper is nearly on the needle.
+  controls.knot = world.knots.held > 0 && ripperGap(world) < 70;
   if (controls.brake) controls.fast = false;
   return controls;
 }

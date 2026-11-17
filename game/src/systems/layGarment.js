@@ -5,6 +5,7 @@
 import { CLOTH, RIPPER, THREAD } from '../config.js';
 import { buildSeamPath, indexAtDistance, seamPointAt } from '../core/seamPath.js';
 import { placeNeedleAtStart } from '../entities/needle.js';
+import { seatRivals } from '../entities/rivals.js';
 
 const CENTER = { x: (CLOTH.left + CLOTH.right) / 2, y: (CLOTH.top + CLOTH.bottom) / 2 };
 const TOPSTITCH_SCALE = 0.56;
@@ -47,6 +48,8 @@ export function layGarment(world, commission) {
     grandmaster: commission.royal, pinClock: 3,
     speed: (RIPPER.baseSpeed + order * RIPPER.speedPerGarment) * world.kit.ripperScale * (commission.royal ? 1.12 : 1),
   };
+  world.rivals = seatRivals(world, order);
+  world.knots.tied = [];
   world.kit.pinGuardsLeft = world.kit.pinGuards;
   world.garmentClock = 0;
   world.bannerClock = 2.6;

@@ -58,11 +58,12 @@ function runFrame(now) {
     unspentSeconds += elapsed;
     let controls = input.readSewingControls();
     // The click that closed a menu must not also floor the pedal or hop.
-    if (!wasSewing) controls = { ...controls, hop: false };
+    if (!wasSewing) controls = { ...controls, hop: false, knot: false };
     while (unspentSeconds >= STEP_SECONDS) {
-      const sewnByPilot = game.autopilotEnabled && game.screen === 'run';
+      const sewnByPilot = game.autopilotEnabled && game.screen === 'run' && game.world.phase === 'sewing';
       stepGame(game, sewnByPilot ? steerAutopilot(playtestPilot, game.world) : controls);
-      controls = { ...controls, hop: false };
+      // A hop or a knot is one press: it must not repeat on every step of the frame.
+      controls = { ...controls, hop: false, knot: false };
       unspentSeconds -= STEP_SECONDS;
     }
   }

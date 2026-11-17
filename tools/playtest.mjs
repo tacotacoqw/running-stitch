@@ -81,6 +81,13 @@ async function main() {
     await mouse('mouseReleased', 640, 400, 'left');
     check('holding the mouse button goes flat out', now.pedal === 'fast');
 
+    const knotsBefore = await page.evaluate('window.runningStitch.world.knots.held');
+    await tap('KeyE', 'e');
+    await sleep(120);
+    const knots = await page.evaluate('({ held: window.runningStitch.world.knots.held, tied: window.runningStitch.world.knots.tied.length, rivals: window.runningStitch.world.rivals.length })');
+    check('E ties a lock stitch and spends a knot', knots.held === knotsBefore - 1 && knots.tied === 1, `${knotsBefore} -> ${knots.held} held, ${knots.tied} tied`);
+    check('three rival tailors sew the same seam', knots.rivals === 3);
+
     await tap('Space', ' ');
     await sleep(80);
     check('Space hops the needle', (await state()).hop > 0);

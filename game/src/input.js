@@ -64,6 +64,7 @@ export function createInput(canvas) {
         fast: pointer.leftHeld || FAST_KEYS.some((code) => held.has(code)),
         brake: pointer.rightHeld || BRAKE_KEYS.some((code) => held.has(code)),
         hop: pressed.has('Space'),
+        knot: pressed.has('KeyE') || pressed.has('ShiftLeft'),
       };
     },
 

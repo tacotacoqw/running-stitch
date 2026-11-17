@@ -2,6 +2,7 @@
 // game over and the finished quilt.
 
 import { INK, VIEW } from '../config.js';
+import { PLACE_NAMES } from '../data/rivalTailors.js';
 import { ORDERS_IN_A_RUN, orderNumber } from '../systems/orderBook.js';
 import { formatScore, paintPaper, paintStitchedText, paintText, paintWrappedText } from './paint.js';
 import { paintPatch } from './scene.js';
@@ -31,7 +32,7 @@ export function paintTitleScreen(ctx, bestScore, time) {
     ['STEER', 'Mouse, or A and D'],
     ['FLAT OUT', 'Hold click or W: double points'],
     ['BRAKE', 'Hold right-click or S'],
-    ['HOP', 'Space: jump a pin'],
+    ['HOP / KNOT', 'Space hops a pin, E ties a lock stitch'],
   ];
   const column = 262;
   const left = CENTER_X - (controls.length * column) / 2;
@@ -41,7 +42,7 @@ export function paintTitleScreen(ctx, bestScore, time) {
     paintText(ctx, name, x, 362, { size: 26, weight: 900, color: INK.red, align: 'center', spacing: 3 });
     paintText(ctx, keys, x, 394, { size: 16, weight: 700, align: 'center' });
   });
-  paintText(ctx, 'Six orders a run, picked from the order book: 12 patterns, 6 fabrics, 14 notions, and the Grandmaster Ripper waiting on the last.', CENTER_X, 440, {
+  paintText(ctx, 'Six orders a run against three rival tailors: 12 patterns, 6 fabrics, 14 notions, and the Grandmaster Ripper waiting on the last.', CENTER_X, 440, {
     size: 15, weight: 700, color: INK.textSoft, align: 'center',
   });
 
@@ -95,7 +96,7 @@ export function paintHaberdasheryScreen(ctx, world, pointer, time) {
   paintText(ctx, 'NEATNESS', CENTER_X - 110, 190, { size: 15, weight: 900, color: INK.red, spacing: 3 });
   paintText(ctx, `${Math.round(piece.neatness * 100)}%`, CENTER_X - 110, 244, { size: 56, weight: 900 });
   paintRosette(ctx, CENTER_X + 70, 216, 40, piece.ribbon);
-  const lines = [['neat stitching', bonus.neat], ['needles left', bonus.needles], ['thread left', bonus.thread]];
+  const lines = [['neat stitching', bonus.neat], [`${PLACE_NAMES[bonus.place - 1]} at the Sewing Bee`, bonus.podium], ['needles and thread left', bonus.needles + bonus.thread]];
   lines.forEach(([label, points], index) => {
     paintText(ctx, label, CENTER_X + 150, 186 + index * 30, { size: 16, weight: 700, color: INK.textSoft });
     paintText(ctx, `+${formatScore(points)}`, CENTER_X + 376, 186 + index * 30, { size: 18, weight: 900, align: 'right' });
@@ -204,7 +205,7 @@ function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
     ['ORDERS SEWN', `${summary.garmentsDone} / ${ORDERS_IN_A_RUN}`],
     ['NEATNESS', `${summary.neatnessPercent}%`],
     ['BEST NEAT CHAIN', `${summary.bestChain} stitches`],
-    ['BUTTONS SEWN ON', `${summary.buttons}`],
+    ['SEWING BEE WINS', `${summary.wins} (${summary.podiums} podiums)`],
   ];
   rows.forEach(([label, value], index) => {
     const y = top + 56 + index * 44;

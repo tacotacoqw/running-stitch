@@ -12,6 +12,8 @@ const RECIPES = {
   ripperWakes: { wave: 'sawtooth', from: 110, to: 220, seconds: 0.5, volume: 0.16 },
   garmentStart: { wave: 'triangle', from: 330, to: 495, seconds: 0.4, volume: 0.18 },
   garmentDone: { wave: 'triangle', from: 523, to: 1046, seconds: 0.7, volume: 0.24 },
+  knot: { wave: 'triangle', from: 300, to: 760, seconds: 0.18, volume: 0.2 },
+  rivalDone: { wave: 'square', from: 520, to: 390, seconds: 0.3, volume: 0.07 },
   notion: { wave: 'triangle', from: 440, to: 880, seconds: 0.3, volume: 0.2 },
 };
 

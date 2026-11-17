@@ -1,6 +1,6 @@
 [
   { "name": "1-play.jpg", "query": "?shot=boss&seed=1" },
   { "name": "2-title.jpg", "query": "?shot=title&seed=3" },
-  { "name": "3-orderbook.jpg", "query": "?shot=orderbook&seed=1" },
+  { "name": "3-haberdashery.jpg", "query": "?shot=haberdashery&seed=1" },
   { "name": "4-gameover.jpg", "query": "?shot=gameover&seed=1" }
 ]
