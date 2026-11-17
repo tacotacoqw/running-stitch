@@ -28,7 +28,20 @@ export function paintScene(ctx, world, time) {
     paintButton(ctx, button.x, button.y, BUTTON_COLORS[order % BUTTON_COLORS.length], button.sewn, world.garment.thread);
     ctx.globalAlpha = 1;
   });
-  for (const pin of world.pins) if (!pin.gone) paintPin(ctx, pin.x, pin.y, pin.angle, 1, pin.hopped ? INK.teal : INK.mustard);
+  for (const pin of world.pins) {
+    if (pin.gone) continue;
+    if (pin.fresh > 0) {
+      // A pin the Grandmaster has thrown: a red ring closes in on where it will land.
+      ctx.beginPath();
+      ctx.arc(pin.x, pin.y, 10 + pin.fresh * 26, 0, Math.PI * 2);
+      ctx.strokeStyle = INK.red;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.globalAlpha = 0.5;
+    }
+    paintPin(ctx, pin.x, pin.y, pin.angle, 1, pin.hopped ? INK.teal : pin.fresh > 0 ? INK.red : INK.mustard);
+    ctx.globalAlpha = 1;
+  }
   for (const scissors of world.scissors) paintScissors(ctx, scissors.x, scissors.y, scissors.angle, scissorsOpenness(scissors));
   if (world.iron) paintIron(ctx, world.iron.x, world.iron.y, 1, time);
   paintRipperAndNeedle(ctx, world, time);
@@ -60,7 +73,7 @@ function paintChalkLine(ctx, world) {
   ctx.moveTo(points[from].x, points[from].y);
   for (let i = from + 1; i < points.length; i += 2) ctx.lineTo(points[i].x, points[i].y);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.lineWidth = STITCH.goodWithin * 2 * world.kit.precision;
+  ctx.lineWidth = STITCH.goodWithin * 2 * world.kit.precision * world.rules.precision;
   ctx.stroke();
   ctx.setLineDash([9, 8]);
   ctx.strokeStyle = 'rgba(40, 22, 10, 0.35)';
@@ -137,8 +150,8 @@ function paintRipperAndNeedle(ctx, world, time) {
   const needle = world.needle;
   const ripper = world.ripper;
   if (ripper.awake) {
-    paintSeamRipper(ctx, ripper.x, ripper.y, ripper.angle, 1, ripper.dazed > 0, time);
-    paintText(ctx, ripper.dazed > 0 ? 'dazed' : 'SEAM RIPPER', ripper.x, ripper.y - 20, {
+    paintSeamRipper(ctx, ripper.x, ripper.y, ripper.angle, ripper.grandmaster ? 1.4 : 1, ripper.dazed > 0, time);
+    paintText(ctx, ripper.dazed > 0 ? 'dazed' : ripper.grandmaster ? 'GRANDMASTER RIPPER' : 'SEAM RIPPER', ripper.x, ripper.y - 22, {
       size: 12, weight: 900, color: INK.paper, align: 'center', spacing: 1, shadow: 'rgba(40, 22, 10, 0.8)',
     });
   }

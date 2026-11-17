@@ -14,7 +14,7 @@ export function layStitches(world) {
   needle.stitchFromX = needle.x;
   needle.stitchFromY = needle.y;
   needle.lastRating = rating;
-  world.thread.left -= needle.sinceStitch;
+  world.thread.left -= needle.sinceStitch * world.rules.threadCost;
   needle.sinceStitch = 0;
   world.stats.stitches += 1;
   scoreStitch(world, rating);
@@ -36,7 +36,7 @@ export function sewButtonsAndBobbins(world) {
     const gap = Math.hypot(button.x - needle.x, button.y - needle.y);
     if (gap < 11 && !isHopping(world)) {
       button.sewn = true;
-      const points = Math.round(REWARD.button * world.kit.buttonScale * chainMultiplier(world));
+      const points = Math.round(REWARD.button * world.kit.buttonScale * world.rules.buttons * world.commission.pay * chainMultiplier(world));
       world.score += points;
       world.stats.buttons += 1;
       world.sounds.push('button');

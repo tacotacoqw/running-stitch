@@ -1,5 +1,6 @@
-// One run of Running Stitch: its state, the fixed simulation step, finishing a garment, and
-// the rules for winning (sew all six) and losing (no needles, or no thread).
+// One run of Running Stitch: its state, the fixed simulation step, and the loop of a run:
+// pick a commission from the order book, sew it, pick a notion at the haberdashery, and on to
+// the next order. Win by sewing all six; lose with no needles or no thread.
 
 import { NEEDLE } from './config.js';
 import { createRng } from './core/rng.js';
@@ -9,17 +10,20 @@ import { driveNeedle } from './entities/needle.js';
 import { updateSeamRipper } from './entities/seamRipper.js';
 import { layStitches, sewButtonsAndBobbins } from './entities/stitching.js';
 import { updateParticles } from './effects/particles.js';
-import { garmentCount, layGarment } from './systems/layGarment.js';
+import { layGarment } from './systems/layGarment.js';
+import { commissionsOnOffer, ORDERS_IN_A_RUN, writeOrderBook } from './systems/orderBook.js';
 import { garmentBonus, ribbonFor } from './systems/scoring.js';
 
-// phase: 'sewing' | 'haberdashery' | 'gameOver' | 'victory'
+// phase: 'orderBook' | 'sewing' | 'haberdashery' | 'gameOver' | 'victory'
 export function createWorld(seed) {
-  const world = {
+  const rng = createRng(seed);
+  return {
     seed,
-    rng: createRng(seed),
-    phase: 'sewing',
+    rng,
+    phase: 'orderBook',
     time: 0,
     score: 0,
+    orderBook: writeOrderBook(rng),
     needles: { left: NEEDLE.startNeedles, max: NEEDLE.startNeedles },
     chain: { count: 0, best: 0 },
     stats: { stitches: 0, buttons: 0, hops: 0 },
@@ -34,8 +38,16 @@ export function createWorld(seed) {
     shake: 0,
     hurtFlash: 0,
   };
-  layGarment(world, 1);
-  return world;
+}
+
+// The player picked a commission from the order book: lay it on the cloth and start sewing.
+export function takeCommission(world, index) {
+  const commission = commissionsOnOffer(world)[index];
+  if (world.phase !== 'orderBook' || !commission) return false;
+  world.orderBook.taken.push(commission);
+  layGarment(world, commission);
+  world.phase = 'sewing';
+  return true;
 }
 
 // One fixed step. `controls` come from the player's input or from the autopilot.
@@ -71,7 +83,7 @@ function finishGarment(world) {
     seconds: Math.round(world.garmentClock),
   });
   world.sounds.push('garmentDone');
-  if (world.garmentNumber >= garmentCount()) {
+  if (world.orderBook.stop + 1 >= ORDERS_IN_A_RUN) {
     world.phase = 'victory';
     return;
   }
@@ -79,13 +91,13 @@ function finishGarment(world) {
   world.phase = 'haberdashery';
 }
 
-// The player picked a notion at the haberdashery: buy it and lay the next garment.
+// The player picked a notion at the haberdashery: buy it and open the order book at the next stop.
 export function chooseNotion(world, index) {
   const notion = world.notionChoices[index];
   if (world.phase !== 'haberdashery' || !notion) return false;
   buyNotion(world, notion);
   world.notionChoices = [];
-  world.phase = 'sewing';
-  layGarment(world, world.garmentNumber + 1);
+  world.orderBook.stop += 1;
+  world.phase = 'orderBook';
   return true;
 }

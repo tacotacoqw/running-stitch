@@ -26,14 +26,16 @@ export function steerAutopilot(pilot, world) {
   }
   for (const scissors of world.scissors) {
     const ahead = scissors.index - needle.progress;
-    if (ahead > 2 && ahead < 16 && scissorsAreShut({ clock: scissors.clock + 0.25 })) controls.brake = true;
+    if (ahead > 2 && ahead < 16 && scissorsAreShut({ clock: scissors.clock + 0.25 }, world.kit.scissorsShutScale)) controls.brake = true;
   }
   const iron = world.iron;
   if (iron) {
-    const soon = seamPointAt(path, needle.progress + 14);
-    const near = Math.hypot(iron.x - soon.x, iron.y - soon.y) < iron.radius + 26;
-    const onTop = Math.hypot(iron.x - needle.x, iron.y - needle.y) < iron.radius + 22;
-    if (near && !onTop) controls.brake = true;
+    // Wait if the iron sits on any of the next few stretches of seam, unless already under it.
+    const onTop = Math.hypot(iron.x - needle.x, iron.y - needle.y) < iron.radius + 14;
+    for (const reach of [6, 12, 18, 24]) {
+      const soon = seamPointAt(path, needle.progress + reach);
+      if (!onTop && Math.hypot(iron.x - soon.x, iron.y - soon.y) < iron.radius + 22) controls.brake = true;
+    }
   }
   if (controls.brake) controls.fast = false;
   return controls;

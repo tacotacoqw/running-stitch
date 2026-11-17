@@ -1,9 +1,10 @@
-// Score: stitch ratings, the neat-stitch chain and its multiplier, neatness, ribbons and grades.
+// Score: stitch ratings, the neat-stitch chain and its multiplier, what a commission pays,
+// neatness, ribbons and the end-of-run summary.
 
 import { CHAIN, PEDAL, REWARD, RIBBONS, STITCH } from '../config.js';
 
 export function rateStitch(world, wobble) {
-  const give = world.kit.precision;
+  const give = world.kit.precision * world.rules.precision;
   if (wobble <= STITCH.perfectWithin * give) return 'perfect';
   if (wobble <= STITCH.goodWithin * give) return 'good';
   if (wobble <= STITCH.sloppyWithin) return 'sloppy';
@@ -11,7 +12,8 @@ export function rateStitch(world, wobble) {
 }
 
 export function chainMultiplier(world) {
-  return Math.min(CHAIN.maxMultiplier, 1 + Math.floor(world.chain.count / CHAIN.stitchesPerStep) * CHAIN.stepBonus);
+  const built = 1 + Math.floor(world.chain.count / CHAIN.stitchesPerStep) * CHAIN.stepBonus;
+  return Math.min(CHAIN.maxMultiplier, Math.max(world.kit.chainFloor, built));
 }
 
 export function paceMultiplier(world) {
@@ -23,12 +25,13 @@ export function paceMultiplier(world) {
 export function scoreStitch(world, rating) {
   world.tally[rating] += 1;
   if (rating === 'perfect' || rating === 'good') {
-    world.chain.count += 1;
+    world.chain.count += world.rules.chainRate;
     world.chain.best = Math.max(world.chain.best, world.chain.count);
   } else {
     breakChain(world);
   }
-  const points = Math.round(STITCH.points[rating] * chainMultiplier(world) * paceMultiplier(world));
+  const worth = STITCH.points[rating] * world.rules.stitchScore * world.commission.pay;
+  const points = Math.round(worth * chainMultiplier(world) * paceMultiplier(world));
   world.score += points;
   return points;
 }
@@ -51,9 +54,11 @@ export function ribbonFor(neatness) {
 // The bonus paid when a garment is finished, itemised for the results card.
 export function garmentBonus(world) {
   const neatness = neatnessOf(world.tally);
-  const neat = Math.round(neatness * 100) * REWARD.neatnessPerPercent * world.garmentNumber;
-  const needles = world.needles.left * REWARD.needleLeft;
-  const thread = Math.round((world.thread.left / world.thread.capacity) * 300);
+  const order = world.orderBook.stop + 1;
+  const scale = world.commission.pay * world.kit.bonusScale;
+  const neat = Math.round(Math.round(neatness * 100) * REWARD.neatnessPerPercent * order * world.rules.neatBonus * scale);
+  const needles = Math.round(world.needles.left * REWARD.needleLeft * scale);
+  const thread = Math.round((world.thread.left / world.thread.capacity) * 300 * scale);
   return { neatness, neat, needles, thread, total: neat + needles + thread };
 }
 

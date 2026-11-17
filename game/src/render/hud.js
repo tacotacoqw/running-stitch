@@ -5,7 +5,8 @@
 import { CHAIN, CLOTH, INK, NEEDLE, PEDAL, VIEW } from '../config.js';
 import { NOTIONS, listOwnedNotions } from '../data/notions.js';
 import { ripperGap } from '../entities/seamRipper.js';
-import { garmentCount } from '../systems/layGarment.js';
+import { grandmasterResolve } from '../entities/seamRipper.js';
+import { ORDERS_IN_A_RUN, orderNumber } from '../systems/orderBook.js';
 import { chainMultiplier, neatnessOf, paceMultiplier, ribbonFor } from '../systems/scoring.js';
 import { formatScore, paintBar, paintKeycap, paintPaper, paintText, paintWrappedText } from './paint.js';
 import { paintBobbin, paintButton, paintIron, paintPin, paintRosette, paintScissors, paintSeamRipper } from './sprites.js';
@@ -25,6 +26,7 @@ export function paintHud(ctx, world, status, time) {
   paintThreadPanel(ctx, world);
   paintPedalPanel(ctx, world);
   paintControlsLegend(ctx, world, status.muted);
+  paintGrandmasterBar(ctx, world);
   paintGarmentBanner(ctx, world);
 }
 
@@ -60,11 +62,13 @@ function paintNeedlesLeft(ctx, world) {
 function paintGarmentHeader(ctx, world) {
   const width = CLOTH.right - CLOTH.left;
   paintPaper(ctx, CLOTH.left, 12, width, 80);
-  paintText(ctx, `GARMENT ${world.garmentNumber} / ${garmentCount()}`, CENTER_X - 12, 42, { size: 26, weight: 900, align: 'right', spacing: 1 });
-  paintText(ctx, world.garment.name.toUpperCase(), CENTER_X + 12, 42, { size: 24, weight: 900, color: INK.navy, spacing: 2 });
+  const order = orderNumber(world);
+  paintText(ctx, `ORDER ${order} / ${ORDERS_IN_A_RUN}`, CENTER_X - 100, 42, { size: 26, weight: 900, align: 'right', spacing: 1 });
+  paintText(ctx, world.garment.name.toUpperCase(), CENTER_X - 80, 42, { size: 24, weight: 900, color: INK.navy, spacing: 2 });
+  paintText(ctx, `for ${world.commission.customer}  ·  pays x${world.commission.pay}`, CLOTH.right - 14, 40, { size: 14, weight: 800, color: INK.textSoft, align: 'right' });
 
-  const left = garmentCount() - world.garmentNumber;
-  const win = left > 0 ? `sew to END, then ${left} more garment${left === 1 ? '' : 's'}` : 'sew to END to finish the quilt';
+  const left = ORDERS_IN_A_RUN - order;
+  const win = left > 0 ? `sew to END, then ${left} more order${left === 1 ? '' : 's'}` : 'sew to END to finish the quilt';
   const lose = `no needles (${world.needles.left} left) or no thread`;
   const half = width / 2 - 18;
   paintRule(ctx, CLOTH.left + 12, half, 'WIN', win, INK.teal);
@@ -106,12 +110,31 @@ function paintOnTheClothPanel(ctx, world) {
     ['bobbin', 'Bobbins', 'spare thread', `x${world.bobbins.filter((bobbin) => !bobbin.taken).length}`],
   ];
   rows.forEach(([icon, name, hint, count], index) => {
-    const y = top + 60 + index * 46;
+    const y = top + 58 + index * 39;
     paintHazardIcon(ctx, icon, LEFT.x + 30, y - 4, world.garment.thread);
     paintText(ctx, name, LEFT.x + 56, y - 3, { size: 15, weight: 900 });
-    paintText(ctx, hint, LEFT.x + 56, y + 13, { size: 12, weight: 600, color: INK.textSoft });
+    paintText(ctx, hint, LEFT.x + 56, y + 12, { size: 12, weight: 600, color: INK.textSoft });
     paintText(ctx, count, LEFT.x + LEFT.width - 14, y + 3, { size: 15, weight: 900, color: INK.red, align: 'right' });
   });
+
+  // The fabric on the table and the trait that changes how it sews.
+  const fabric = world.commission.fabric;
+  ctx.fillStyle = 'rgba(58, 42, 32, 0.25)';
+  ctx.fillRect(LEFT.x + 14, top + 280, LEFT.width - 28, 1);
+  paintText(ctx, fabric.name.toUpperCase(), LEFT.x + 14, top + 302, { size: 13, weight: 900, color: INK.navy, spacing: 2 });
+  paintText(ctx, fabric.trait, LEFT.x + LEFT.width - 14, top + 302, { size: 13, weight: 900, color: INK.red, align: 'right' });
+  paintText(ctx, fabric.text, LEFT.x + 14, top + 320, { size: 12, weight: 700, color: INK.textSoft });
+}
+
+// The royal commission's boss: its resolve drains as the cape is sewn.
+function paintGrandmasterBar(ctx, world) {
+  if (!world.ripper.grandmaster) return;
+  const width = 430;
+  const x = CENTER_X - width / 2;
+  const y = CLOTH.top + 14;
+  paintPaper(ctx, x - 12, y - 6, width + 24, 46, 12, INK.paper, INK.red);
+  paintText(ctx, 'GRANDMASTER RIPPER', CENTER_X, y + 12, { size: 14, weight: 900, color: INK.red, align: 'center', spacing: 4 });
+  paintBar(ctx, x, y + 20, width, 11, grandmasterResolve(world), INK.red);
 }
 
 export function paintHazardIcon(ctx, icon, x, y, threadColor = INK.navy) {
@@ -235,7 +258,8 @@ function paintGarmentBanner(ctx, world) {
   ctx.save();
   ctx.globalAlpha = alpha;
   paintPaper(ctx, CENTER_X - 250, y - 62, 500, 104, 18);
-  paintText(ctx, `GARMENT ${world.garmentNumber}`, CENTER_X, y - 22, { size: 22, weight: 900, color: INK.red, align: 'center', spacing: 5 });
+  const heading = world.commission.royal ? 'THE ROYAL COMMISSION' : `ORDER ${orderNumber(world)} FOR ${world.commission.customer.toUpperCase()}`;
+  paintText(ctx, heading, CENTER_X, y - 22, { size: 20, weight: 900, color: INK.red, align: 'center', spacing: 4 });
   paintText(ctx, world.garment.name, CENTER_X, y + 22, { size: 42, weight: 900, align: 'center' });
   ctx.restore();
 }

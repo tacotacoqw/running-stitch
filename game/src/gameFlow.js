@@ -6,7 +6,8 @@ import { STEP_SECONDS } from './config.js';
 import { notionCardAt } from './render/screens.js';
 import { loadBestScore, saveBestScore } from './storage.js';
 import { summarizeRun } from './systems/scoring.js';
-import { chooseNotion, createWorld, stepWorld } from './world.js';
+import { commissionCardAt } from './render/orderBookScreen.js';
+import { chooseNotion, createWorld, stepWorld, takeCommission } from './world.js';
 
 export function createGame(seed) {
   const game = {
@@ -29,6 +30,7 @@ export function createGame(seed) {
 function restartDemo(game) {
   game.seed += 1;
   game.demoWorld = createWorld(game.seed);
+  takeCommission(game.demoWorld, 0);
 }
 
 export function startNewRun(game) {
@@ -59,6 +61,14 @@ export function handleMenuInput(game, input) {
     else if (confirm || input.wasPressed('KeyR')) startNewRun(game);
     return;
   }
+  if (world.phase === 'orderBook') {
+    let pick = -1;
+    if (input.anyPressed('Digit1', 'Numpad1')) pick = 0;
+    if (input.anyPressed('Digit2', 'Numpad2')) pick = 1;
+    if (input.pointer.clicked) pick = commissionCardAt(world, input.pointer.x, input.pointer.y);
+    if (pick >= 0) takeCommission(world, pick);
+    return;
+  }
   if (world.phase === 'haberdashery') {
     let pick = -1;
     if (input.anyPressed('Digit1', 'Numpad1')) pick = 0;
@@ -86,8 +96,9 @@ export function stepGame(game, sewingControls) {
 
 export function stepDemo(game) {
   const demo = game.demoWorld;
+  if (demo.phase === 'orderBook') takeCommission(demo, 0);
   if (demo.phase === 'haberdashery') chooseNotion(demo, 0);
-  if (demo.phase !== 'sewing') {
+  if (demo.phase !== 'sewing' && demo.phase !== 'orderBook') {
     restartDemo(game);
     return;
   }

@@ -2,7 +2,7 @@
 // game over and the finished quilt.
 
 import { INK, VIEW } from '../config.js';
-import { garmentCount } from '../systems/layGarment.js';
+import { ORDERS_IN_A_RUN, orderNumber } from '../systems/orderBook.js';
 import { formatScore, paintPaper, paintStitchedText, paintText, paintWrappedText } from './paint.js';
 import { paintPatch } from './scene.js';
 import { paintHazardIcon } from './hud.js';
@@ -41,7 +41,7 @@ export function paintTitleScreen(ctx, bestScore, time) {
     paintText(ctx, name, x, 362, { size: 26, weight: 900, color: INK.red, align: 'center', spacing: 3 });
     paintText(ctx, keys, x, 394, { size: 16, weight: 700, align: 'center' });
   });
-  paintText(ctx, 'Stitch on the line for points. Six garments to sew, a notion to pick after each. Three needles: do not bend them all.', CENTER_X, 440, {
+  paintText(ctx, 'Six orders a run, picked from the order book: 12 patterns, 6 fabrics, 14 notions, and the Grandmaster Ripper waiting on the last.', CENTER_X, 440, {
     size: 15, weight: 700, color: INK.textSoft, align: 'center',
   });
 
@@ -157,6 +157,30 @@ function paintNotionIcon(ctx, icon, x, y) {
     paintButton(ctx, 0, 0, INK.mustard, true, INK.red, 3);
   } else if (icon === 'ripper') {
     paintSeamRipper(ctx, 16, 0, -0.4, 1.5);
+  } else if (icon === 'tape') {
+    ctx.fillStyle = INK.mustard;
+    ctx.beginPath(); ctx.arc(-8, 0, 28, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillRect(18, 14, 28, 14); ctx.strokeRect(18, 14, 28, 14);
+    ctx.fillStyle = INK.paper;
+    ctx.beginPath(); ctx.arc(-8, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  } else if (icon === 'case') {
+    ctx.fillStyle = INK.teal;
+    ctx.beginPath(); ctx.roundRect(-38, -18, 76, 36, 16); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = INK.paper;
+    for (let needle = -1; needle <= 1; needle++) { ctx.beginPath(); ctx.moveTo(-24, needle * 8); ctx.lineTo(24, needle * 8); ctx.stroke(); }
+  } else if (icon === 'weights') {
+    ctx.fillStyle = INK.steelDark;
+    for (const [dx, dy] of [[-20, 10], [20, 10], [0, -16]]) { ctx.beginPath(); ctx.arc(dx, dy, 17, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  } else if (icon === 'wheel') {
+    ctx.fillStyle = INK.paper;
+    ctx.beginPath(); ctx.arc(14, 12, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = INK.red; ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(4, 2); ctx.lineTo(-34, -30); ctx.stroke();
+  } else if (icon === 'snips') {
+    ctx.fillStyle = INK.steel;
+    ctx.beginPath(); ctx.moveTo(-36, -16); ctx.lineTo(36, 0); ctx.lineTo(-36, 16); ctx.lineTo(-24, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = INK.red;
+    ctx.beginPath(); ctx.arc(-22, 0, 5, 0, Math.PI * 2); ctx.fill();
   } else if (icon === 'pedal') {
     ctx.fillStyle = INK.navy;
     ctx.beginPath(); ctx.moveTo(-36, 28); ctx.lineTo(36, 28); ctx.lineTo(30, -6); ctx.lineTo(-26, -28); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -177,7 +201,7 @@ function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
   paintPaper(ctx, CENTER_X - 480, top, 960, 300, 20);
   const rows = [
     ['SCORE', formatScore(summary.score)],
-    ['GARMENTS SEWN', `${summary.garmentsDone} / ${garmentCount()}`],
+    ['ORDERS SEWN', `${summary.garmentsDone} / ${ORDERS_IN_A_RUN}`],
     ['NEATNESS', `${summary.neatnessPercent}%`],
     ['BEST NEAT CHAIN', `${summary.bestChain} stitches`],
     ['BUTTONS SEWN ON', `${summary.buttons}`],
@@ -197,7 +221,7 @@ function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
 
   paintText(ctx, 'YOUR QUILT', CENTER_X + 120, top + 34, { size: 14, weight: 900, color: INK.red, spacing: 4 });
   const patch = 108;
-  for (let slot = 0; slot < garmentCount(); slot++) {
+  for (let slot = 0; slot < ORDERS_IN_A_RUN; slot++) {
     const x = CENTER_X + 120 + (slot % 3) * (patch + 10);
     const y = top + 46 + Math.floor(slot / 3) * 100;
     const piece = world.finished[slot];
@@ -216,7 +240,7 @@ function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
 export function paintGameOverScreen(ctx, world, summary, bestScore, isNewBest, time) {
   shade(ctx, 0.76);
   paintStitchedText(ctx, 'ALL UNPICKED!', CENTER_X, 150, { size: 104, spacing: 8, color: '#ffd9d2' });
-  paintText(ctx, `${world.loseReason} on garment ${world.garmentNumber}: ${world.garment.name}`, CENTER_X, 200, { size: 24, weight: 800, color: INK.paper, align: 'center' });
+  paintText(ctx, `${world.loseReason} on order ${orderNumber(world)}: ${world.garment.name}`, CENTER_X, 200, { size: 24, weight: 800, color: INK.paper, align: 'center' });
   paintRunSummary(ctx, world, summary, bestScore, isNewBest, 232);
   paintPrompt(ctx, 'PRESS R OR CLICK TO RESTART', 626, time);
   paintText(ctx, 'Esc returns to the title screen', CENTER_X, 700, { size: 18, weight: 800, color: INK.paper, align: 'center' });
@@ -225,7 +249,7 @@ export function paintGameOverScreen(ctx, world, summary, bestScore, isNewBest, t
 export function paintVictoryScreen(ctx, world, summary, bestScore, isNewBest, time) {
   shade(ctx, 0.66);
   paintStitchedText(ctx, 'THE QUILT IS DONE!', CENTER_X, 150, { size: 96, spacing: 6, thread: INK.teal });
-  paintText(ctx, 'Six garments sewn and the seam ripper left behind. You win!', CENTER_X, 200, { size: 24, weight: 800, color: INK.mustard, align: 'center' });
+  paintText(ctx, 'Six orders sewn and the Grandmaster Ripper beaten. You win!', CENTER_X, 200, { size: 24, weight: 800, color: INK.mustard, align: 'center' });
   paintRunSummary(ctx, world, summary, bestScore, isNewBest, 232);
   paintPrompt(ctx, 'PRESS R OR CLICK TO PLAY AGAIN', 626, time);
   paintText(ctx, 'Esc returns to the title screen', CENTER_X, 700, { size: 18, weight: 800, color: INK.paper, align: 'center' });

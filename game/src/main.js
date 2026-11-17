@@ -6,7 +6,9 @@ import { createAutopilot, steerAutopilot } from './autopilot.js';
 import { STEP_SECONDS, VIEW } from './config.js';
 import { createGame, handleMenuInput, stepGame } from './gameFlow.js';
 import { createInput } from './input.js';
+import { paintTable } from './render/fabric.js';
 import { paintHud } from './render/hud.js';
+import { paintOrderBookScreen } from './render/orderBookScreen.js';
 import { paintScene } from './render/scene.js';
 import { paintGameOverScreen, paintHaberdasheryScreen, paintPauseScreen, paintTitleScreen, paintVictoryScreen } from './render/screens.js';
 import { readShotRequest, stageScreenshotScene } from './screenshotScenes.js';
@@ -80,9 +82,15 @@ function paintFrame() {
     return;
   }
   const world = game.world;
-  paintScene(ctx, world, clock);
-  paintHud(ctx, world, { bestScore: game.bestScore, muted: soundEffects.isMuted() }, clock);
-  if (world.phase === 'haberdashery') paintHaberdasheryScreen(ctx, world, input.pointer, clock);
+  if (world.path) {
+    paintScene(ctx, world, clock);
+    paintHud(ctx, world, { bestScore: game.bestScore, muted: soundEffects.isMuted() }, clock);
+  } else {
+    // Before the first commission is taken there is nothing on the table yet.
+    paintTable(ctx);
+  }
+  if (world.phase === 'orderBook') paintOrderBookScreen(ctx, world, input.pointer);
+  else if (world.phase === 'haberdashery') paintHaberdasheryScreen(ctx, world, input.pointer, clock);
   else if (world.phase === 'gameOver') paintGameOverScreen(ctx, world, game.summary, game.bestScore, game.isNewBest, clock);
   else if (world.phase === 'victory') paintVictoryScreen(ctx, world, game.summary, game.bestScore, game.isNewBest, clock);
   else if (game.paused) paintPauseScreen(ctx);

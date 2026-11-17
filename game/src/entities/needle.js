@@ -18,9 +18,10 @@ export function driveNeedle(world, controls, dt) {
   const needle = world.needle;
   needle.pedal = controls.brake ? 'brake' : controls.fast ? 'fast' : 'cruise';
   const pedal = PEDAL[needle.pedal];
-  needle.speed += (pedal.speed - needle.speed) * Math.min(1, PEDAL.response * dt);
+  // The fabric's trait scales how fast the cloth feeds and how tightly it turns.
+  needle.speed += (pedal.speed * world.rules.speed - needle.speed) * Math.min(1, PEDAL.response * dt);
 
-  const turnRate = pedal.turn * world.kit.turnScale;
+  const turnRate = pedal.turn * world.kit.turnScale * world.rules.turn;
   if (controls.useAim) {
     const want = Math.atan2(controls.aimY - needle.y, controls.aimX - needle.x);
     let turn = (want - needle.heading) % (Math.PI * 2);
@@ -66,7 +67,7 @@ export function bendNeedle(world, why) {
   const needle = world.needle;
   if (needle.safe > 0 || world.phase !== 'sewing') return false;
   world.needles.left -= 1;
-  needle.safe = NEEDLE.hurtSafeSeconds;
+  needle.safe = NEEDLE.hurtSafeSeconds * world.kit.safeScale;
   breakChain(world);
   world.shake = 0.6;
   world.hurtFlash = 0.35;
