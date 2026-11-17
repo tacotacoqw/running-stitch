@@ -44,6 +44,19 @@ async function main() {
     await sleep(1200);
     check('opens on the title screen', (await state()).screen === 'title');
 
+    // The workshop: lend the save some thimbles, buy the first upgrade, and go back.
+    await tap('KeyW', 'w');
+    await sleep(200);
+    check('W opens the workshop from the title', (await state()).screen === 'workshop');
+    await page.evaluate('window.runningStitch.save.thimbles = 20');
+    await tap('Digit1', '1');
+    await sleep(200);
+    const bench = await page.evaluate('({ thimbles: window.runningStitch.save.thimbles, level: window.runningStitch.save.bench.spareNeedle })');
+    check('pressing 1 buys the Spare Needle for 12 thimbles', bench.thimbles === 8 && bench.level === 1);
+    await tap('Escape', 'Escape');
+    await sleep(200);
+    check('Esc returns to the title', (await state()).screen === 'title');
+
     await tap('Enter', 'Enter');
     await sleep(300);
     let now = await state();
@@ -149,7 +162,7 @@ async function main() {
     await tap('KeyR', 'r');
     await sleep(300);
     now = await state();
-    check('R restarts at order 1 with a clean score', now.phase === 'orderBook' && now.order === 1 && now.score === 0 && now.needles === 3);
+    check('R restarts at order 1 with a clean score', now.phase === 'orderBook' && now.order === 1 && now.score === 0 && now.needles === 4);
 
     check('no page errors', page.problems.length === 0, page.problems.join(' | '));
     page.close();

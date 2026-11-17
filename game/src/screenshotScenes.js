@@ -7,6 +7,7 @@
 //   haberdashery  a finished garment and the choice of notions
 //   gameover      the game-over screen with the quilt so far
 //   victory       the finished quilt
+//   workshop      the workshop bench and the badge shelf
 // `&order=<n>` asks for a scene at or after that order of the run.
 
 import { createAutopilot, steerAutopilot } from './autopilot.js';
@@ -40,7 +41,9 @@ const SCENE_REACHED = {
 
 export function stageScreenshotScene(game, request) {
   game.seed = request.seed - 1;
-  if (request.scene === 'title') {
+  if (request.scene === 'workshop') {
+    game.screen = 'workshop';
+  } else if (request.scene === 'title') {
     returnToTitle(game);
     for (let step = 0; step < 120 * 16; step++) stepDemo(game);
   } else {

@@ -28,6 +28,7 @@ node serve.ts   # then open http://localhost:8080 in desktop Chrome
 - **A run is six orders.** At each stop the order book offers two commissions drawn from a catalogue of twelve patterns: the harder garment pays more. The sixth is always the royal commission, sewn with the Grandmaster Ripper throwing pins ahead of you.
 - **Three rival tailors** sew every order beside you on the same pattern. Live standings show the gaps, and your place on the podium pays a bonus.
 - **The lock stitch** (E): every button you sew on earns a knot. Tie one off and the seam ripper has to gnaw through it before it can go on.
+- **A career between runs**: every run pays thimbles for its score, podiums and wins. The workshop (W on the title screen) spends them on six permanent upgrades; ten badges mark feats; the daily run (D) gives everyone the same order book for the day.
 - **Six fabrics** each change how a garment sews: jersey forgives a wobble but eats thread, denim turns wide, velvet runs fast, dotted cotton builds the chain twice as quickly.
 - **Win** by sewing all six orders to their END marks. **Lose** when the last needle bends or the spool runs out of thread.
 - **Stitches** are rated perfect, good, sloppy or off the line. Perfect and good ones build a chain worth up to four times the points.
@@ -49,7 +50,7 @@ No build step and no dependencies: plain ES modules drawn on one canvas, every s
 | `game/src/core/` | the seam path geometry and the seeded random source |
 | `game/src/data/` | the garment catalogue, the fabrics and the notions |
 | `game/src/entities/` | needle, stitching, seam ripper and its Grandmaster, hazards |
-| `game/src/systems/` | the order book, laying a garment on the cloth, scoring |
+| `game/src/systems/` | the order book, laying a garment on the cloth, scoring, standings, workshop, badges, daily run |
 | `game/src/render/` | fabrics and table, scene, sprites, HUD, order book and menu screens |
 | `game/src/audio/` | synthesised sound effects and the workshop tune |
 | `game/src/autopilot.js` | the bot behind the title screen's demo |

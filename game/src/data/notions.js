@@ -7,7 +7,7 @@ export function createKit() {
   return {
     precision: 1, turnScale: 1, hopCooldownScale: 1, threadScale: 1, ripperScale: 1, buttonScale: 1,
     paceBonus: 0, pinGuards: 0, pinGuardsLeft: 0, bonusScale: 1, safeScale: 1, fewerPins: 0,
-    chainFloor: 1, scissorsShutScale: 1, owned: {},
+    chainFloor: 1, scissorsShutScale: 1, ripperHeadStart: 0, owned: {},
   };
 }
 

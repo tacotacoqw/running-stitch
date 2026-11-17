@@ -10,7 +10,7 @@ export function updateSeamRipper(world, dt) {
   const ripper = world.ripper;
   const stitches = world.stitches;
   if (!ripper.awake) {
-    if (stitches.length * STITCH.length >= RIPPER.headStart) {
+    if (stitches.length * STITCH.length >= RIPPER.headStart + world.kit.ripperHeadStart) {
       ripper.awake = true;
       world.sounds.push('ripperWakes');
     }

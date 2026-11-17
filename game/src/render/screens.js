@@ -4,7 +4,11 @@
 import { INK, VIEW } from '../config.js';
 import { PLACE_NAMES } from '../data/rivalTailors.js';
 import { ORDERS_IN_A_RUN, orderNumber } from '../systems/orderBook.js';
-import { formatScore, paintPaper, paintStitchedText, paintText, paintWrappedText } from './paint.js';
+import { BADGES } from '../data/badges.js';
+import { badgesHeld } from '../systems/badges.js';
+import { dailyLabel } from '../systems/dailyRun.js';
+import { benchLevelsBought } from '../systems/workshop.js';
+import { formatScore, paintKeycap, paintPaper, paintStitchedText, paintText, paintWrappedText } from './paint.js';
 import { paintPatch } from './scene.js';
 import { paintHazardIcon } from './hud.js';
 import { paintBobbin, paintButton, paintNeedle, paintPin, paintRosette, paintSeamRipper } from './sprites.js';
@@ -23,7 +27,7 @@ function paintPrompt(ctx, text, y, time) {
   paintText(ctx, text, CENTER_X, y + bob, { size: 40, weight: 900, align: 'center', spacing: 1 });
 }
 
-export function paintTitleScreen(ctx, bestScore, time) {
+export function paintTitleScreen(ctx, save, time) {
   shade(ctx, 0.5);
   paintStitchedText(ctx, 'RUNNING STITCH', CENTER_X + 4, 212, { size: 118, spacing: 8 });
   paintText(ctx, 'Race your needle down the chalk line. Outrun the seam ripper.', CENTER_X, 270, { size: 28, weight: 800, color: INK.mustard, align: 'center' });
@@ -47,8 +51,20 @@ export function paintTitleScreen(ctx, bestScore, time) {
   });
 
   paintPrompt(ctx, 'CLICK OR PRESS ENTER TO START', 548, time);
-  const best = bestScore > 0 ? `BEST SCORE  ${formatScore(bestScore)}` : 'P pauses  ·  R restarts  ·  M mutes';
-  paintText(ctx, best, CENTER_X, 606, { size: 17, weight: 800, color: INK.paper, align: 'center', spacing: 3 });
+
+  // The career beside a single run: the daily run, the workshop and the badges.
+  const career = [
+    ['D', 'DAILY RUN', `today's order book: ${dailyLabel()}`],
+    ['W', 'WORKSHOP', `${save.thimbles} thimbles, ${benchLevelsBought(save)} upgrades fitted`],
+    ['', 'BADGES', `${badgesHeld(save)} of ${BADGES.length} earned`],
+    ['', 'BEST SCORE', save.bestScore > 0 ? formatScore(save.bestScore) : 'no run yet'],
+  ];
+  career.forEach(([key, name, note], index) => {
+    const x = CENTER_X - 520 + index * 262;
+    if (key) paintKeycap(ctx, x, 598, key, name);
+    else paintText(ctx, name, x + 4, 617, { size: 15, weight: 900, color: INK.mustard, spacing: 1, shadow: 'rgba(40, 22, 10, 0.5)' });
+    paintText(ctx, note, x + 4, 642, { size: 13, weight: 700, color: INK.paper });
+  });
 
   const legend = [
     ['ripper', 'Seam Ripper', 'unpicks your seam'],
@@ -198,14 +214,15 @@ export function paintPauseScreen(ctx) {
 }
 
 // The run's summary card and every finished garment as a patch of the quilt.
-function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
+function paintRunSummary(ctx, world, game, top) {
+  const summary = game.summary;
   paintPaper(ctx, CENTER_X - 480, top, 960, 300, 20);
   const rows = [
     ['SCORE', formatScore(summary.score)],
     ['ORDERS SEWN', `${summary.garmentsDone} / ${ORDERS_IN_A_RUN}`],
     ['NEATNESS', `${summary.neatnessPercent}%`],
     ['BEST NEAT CHAIN', `${summary.bestChain} stitches`],
-    ['SEWING BEE WINS', `${summary.wins} (${summary.podiums} podiums)`],
+    ['BEE WINS', `${summary.wins} (${summary.podiums} podiums)`],
   ];
   rows.forEach(([label, value], index) => {
     const y = top + 56 + index * 44;
@@ -213,9 +230,12 @@ function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
     paintText(ctx, label, CENTER_X - 448, y, { size: first ? 24 : 18, weight: 900, color: INK.textSoft, spacing: 3 });
     paintText(ctx, value, CENTER_X - 60, y, { size: first ? 46 : 26, weight: 900, align: 'right', color: first ? INK.red : INK.text });
   });
-  paintText(ctx, isNewBest ? 'NEW BEST SCORE!' : `BEST ${formatScore(bestScore)}`, CENTER_X - 448, top + 278, {
-    size: 16, weight: 900, color: isNewBest ? INK.teal : INK.textSoft, spacing: 3,
+  paintText(ctx, game.isNewBest ? 'NEW BEST SCORE!' : `BEST ${formatScore(game.save.bestScore)}`, CENTER_X - 448, top + 278, {
+    size: 16, weight: 900, color: game.isNewBest ? INK.teal : INK.textSoft, spacing: 3,
   });
+  // What the run earned for the career: thimbles for the workshop, and any new badges.
+  const badges = game.newBadges.length > 0 ? `   ·   new badge: ${game.newBadges.join(', ')}` : '';
+  paintText(ctx, `+${game.thimblesWon} thimbles for the workshop${badges}`, CENTER_X + 448, top + 278, { size: 15, weight: 900, color: INK.navy, align: 'right' });
 
   paintRosette(ctx, CENTER_X + 30, top + 96, 46, summary.ribbon);
   paintText(ctx, 'RIBBON', CENTER_X + 30, top + 196, { size: 14, weight: 900, color: INK.red, align: 'center', spacing: 4 });
@@ -238,20 +258,20 @@ function paintRunSummary(ctx, world, summary, bestScore, isNewBest, top) {
   }
 }
 
-export function paintGameOverScreen(ctx, world, summary, bestScore, isNewBest, time) {
+export function paintGameOverScreen(ctx, world, game, time) {
   shade(ctx, 0.76);
   paintStitchedText(ctx, 'ALL UNPICKED!', CENTER_X, 150, { size: 104, spacing: 8, color: '#ffd9d2' });
   paintText(ctx, `${world.loseReason} on order ${orderNumber(world)}: ${world.garment.name}`, CENTER_X, 200, { size: 24, weight: 800, color: INK.paper, align: 'center' });
-  paintRunSummary(ctx, world, summary, bestScore, isNewBest, 232);
+  paintRunSummary(ctx, world, game, 232);
   paintPrompt(ctx, 'PRESS R OR CLICK TO RESTART', 626, time);
   paintText(ctx, 'Esc returns to the title screen', CENTER_X, 700, { size: 18, weight: 800, color: INK.paper, align: 'center' });
 }
 
-export function paintVictoryScreen(ctx, world, summary, bestScore, isNewBest, time) {
+export function paintVictoryScreen(ctx, world, game, time) {
   shade(ctx, 0.66);
   paintStitchedText(ctx, 'THE QUILT IS DONE!', CENTER_X, 150, { size: 96, spacing: 6, thread: INK.teal });
   paintText(ctx, 'Six orders sewn and the Grandmaster Ripper beaten. You win!', CENTER_X, 200, { size: 24, weight: 800, color: INK.mustard, align: 'center' });
-  paintRunSummary(ctx, world, summary, bestScore, isNewBest, 232);
+  paintRunSummary(ctx, world, game, 232);
   paintPrompt(ctx, 'PRESS R OR CLICK TO PLAY AGAIN', 626, time);
   paintText(ctx, 'Esc returns to the title screen', CENTER_X, 700, { size: 18, weight: 800, color: INK.paper, align: 'center' });
 }

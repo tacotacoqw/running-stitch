@@ -67,6 +67,7 @@ export function bendNeedle(world, why) {
   const needle = world.needle;
   if (needle.safe > 0 || world.phase !== 'sewing') return false;
   world.needles.left -= 1;
+  world.stats.bent += 1;
   needle.safe = NEEDLE.hurtSafeSeconds * world.kit.safeScale;
   breakChain(world);
   world.shake = 0.6;

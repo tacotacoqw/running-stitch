@@ -11,6 +11,7 @@ import { paintHud } from './render/hud.js';
 import { paintOrderBookScreen } from './render/orderBookScreen.js';
 import { paintScene } from './render/scene.js';
 import { paintGameOverScreen, paintHaberdasheryScreen, paintPauseScreen, paintTitleScreen, paintVictoryScreen } from './render/screens.js';
+import { paintWorkshopScreen } from './render/workshopScreen.js';
 import { readShotRequest, stageScreenshotScene } from './screenshotScenes.js';
 
 const canvas = document.getElementById('game');
@@ -79,21 +80,25 @@ function paintFrame() {
   ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
   if (game.screen === 'title') {
     paintScene(ctx, game.demoWorld, clock);
-    paintTitleScreen(ctx, game.bestScore, clock);
+    paintTitleScreen(ctx, game.save, clock);
+    return;
+  }
+  if (game.screen === 'workshop') {
+    paintWorkshopScreen(ctx, game.save, input.pointer);
     return;
   }
   const world = game.world;
   if (world.path) {
     paintScene(ctx, world, clock);
-    paintHud(ctx, world, { bestScore: game.bestScore, muted: soundEffects.isMuted() }, clock);
+    paintHud(ctx, world, { bestScore: game.save.bestScore, muted: soundEffects.isMuted() }, clock);
   } else {
     // Before the first commission is taken there is nothing on the table yet.
     paintTable(ctx);
   }
   if (world.phase === 'orderBook') paintOrderBookScreen(ctx, world, input.pointer);
   else if (world.phase === 'haberdashery') paintHaberdasheryScreen(ctx, world, input.pointer, clock);
-  else if (world.phase === 'gameOver') paintGameOverScreen(ctx, world, game.summary, game.bestScore, game.isNewBest, clock);
-  else if (world.phase === 'victory') paintVictoryScreen(ctx, world, game.summary, game.bestScore, game.isNewBest, clock);
+  else if (world.phase === 'gameOver') paintGameOverScreen(ctx, world, game, clock);
+  else if (world.phase === 'victory') paintVictoryScreen(ctx, world, game, clock);
   else if (game.paused) paintPauseScreen(ctx);
 }
 

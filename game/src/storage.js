@@ -1,18 +1,21 @@
-// Keeps the best score between visits, where the browser allows local storage.
+// The save file, kept in the browser's local storage where it is allowed: best score, the
+// thimbles earned across runs, the workshop upgrades bought with them, and the badges won.
 
-const BEST_SCORE_KEY = 'runningStitch.bestScore';
+const SAVE_KEY = 'runningStitch.save.v2';
 
-export function loadBestScore() {
+export function loadSave() {
+  const fresh = { bestScore: 0, thimbles: 0, bench: {}, badges: {}, runs: 0 };
   try {
-    return Number(window.localStorage.getItem(BEST_SCORE_KEY)) || 0;
+    const stored = JSON.parse(window.localStorage.getItem(SAVE_KEY) || 'null');
+    return stored && typeof stored === 'object' ? { ...fresh, ...stored } : fresh;
   } catch {
-    return 0;
+    return fresh;
   }
 }
 
-export function saveBestScore(score) {
+export function storeSave(save) {
   try {
-    window.localStorage.setItem(BEST_SCORE_KEY, String(Math.round(score)));
+    window.localStorage.setItem(SAVE_KEY, JSON.stringify(save));
   } catch {
     // A private window may refuse storage: the game plays on without it.
   }
