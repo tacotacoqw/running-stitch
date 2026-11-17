@@ -2,6 +2,7 @@
 
 import { CLOTH, NEEDLE, PEDAL } from '../config.js';
 import { nearestOnSeam, seamPointAt } from '../core/seamPath.js';
+import { stitchStyleOf } from '../data/stitchStyles.js';
 import { spawnBurst } from '../effects/particles.js';
 import { breakChain } from '../systems/scoring.js';
 
@@ -19,7 +20,12 @@ export function driveNeedle(world, controls, dt) {
   needle.pedal = controls.brake ? 'brake' : controls.fast ? 'fast' : 'cruise';
   const pedal = PEDAL[needle.pedal];
   // The fabric's trait scales how fast the cloth feeds and how tightly it turns.
-  needle.speed += (pedal.speed * world.rules.speed - needle.speed) * Math.min(1, PEDAL.response * dt);
+  if (controls.style >= 0 && controls.style !== world.stitchStyle) {
+    world.stitchStyle = controls.style;
+    world.sounds.push('notion');
+  }
+  const feed = pedal.speed * world.rules.speed * stitchStyleOf(world).feed;
+  needle.speed += (feed - needle.speed) * Math.min(1, PEDAL.response * dt);
 
   const turnRate = pedal.turn * world.kit.turnScale * world.rules.turn;
   if (controls.useAim) {

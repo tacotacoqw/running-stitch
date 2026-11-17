@@ -4,6 +4,7 @@
 import { INK, REWARD, STITCH, THREAD } from '../config.js';
 import { spawnBurst, spawnFloatingWord } from '../effects/particles.js';
 import { chainMultiplier, rateStitch, scoreStitch } from '../systems/scoring.js';
+import { stitchStyleOf } from '../data/stitchStyles.js';
 import { earnKnot } from './lockStitch.js';
 import { isHopping } from './needle.js';
 
@@ -11,11 +12,12 @@ export function layStitches(world) {
   const needle = world.needle;
   if (isHopping(world) || needle.sinceStitch < STITCH.length) return;
   const rating = rateStitch(world, needle.wobble);
-  world.stitches.push({ ax: needle.stitchFromX, ay: needle.stitchFromY, bx: needle.x, by: needle.y, rating, ripped: false });
+  const style = stitchStyleOf(world);
+  world.stitches.push({ ax: needle.stitchFromX, ay: needle.stitchFromY, bx: needle.x, by: needle.y, rating, ripped: false, style: style.id });
   needle.stitchFromX = needle.x;
   needle.stitchFromY = needle.y;
   needle.lastRating = rating;
-  world.thread.left -= needle.sinceStitch * world.rules.threadCost;
+  world.thread.left -= needle.sinceStitch * world.rules.threadCost * style.thread;
   needle.sinceStitch = 0;
   world.stats.stitches += 1;
   scoreStitch(world, rating);

@@ -22,6 +22,7 @@ node serve.ts   # then open http://localhost:8080 in desktop Chrome
 | Flat out | Hold click or W: twice the points, wider turns |
 | Brake | Hold right-click or S: wait out a hazard, while the ripper gains on you |
 | Hop | Space: lift the needle over a pin |
+| Stitch style | 1 running, 2 zigzag (forgiving, eats thread), 3 satin (double points, no room to wobble) |
 | Lock stitch | E: spend a knot to hold the seam ripper back |
 | Pause / restart / sound | P, R, M |
 

@@ -2,10 +2,11 @@
 // neatness, ribbons and the end-of-run summary.
 
 import { CHAIN, PEDAL, REWARD, RIBBONS, STITCH } from '../config.js';
+import { stitchStyleOf } from '../data/stitchStyles.js';
 import { finishingPlace, podiumBonus } from './standings.js';
 
 export function rateStitch(world, wobble) {
-  const give = world.kit.precision * world.rules.precision;
+  const give = world.kit.precision * world.rules.precision * stitchStyleOf(world).give;
   if (wobble <= STITCH.perfectWithin * give) return 'perfect';
   if (wobble <= STITCH.goodWithin * give) return 'good';
   if (wobble <= STITCH.sloppyWithin) return 'sloppy';
@@ -31,7 +32,7 @@ export function scoreStitch(world, rating) {
   } else {
     breakChain(world);
   }
-  const worth = STITCH.points[rating] * world.rules.stitchScore * world.commission.pay;
+  const worth = STITCH.points[rating] * world.rules.stitchScore * world.commission.pay * stitchStyleOf(world).worth;
   const points = Math.round(worth * chainMultiplier(world) * paceMultiplier(world));
   world.score += points;
   return points;

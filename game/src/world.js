@@ -30,6 +30,7 @@ export function createWorld(seed) {
     chain: { count: 0, best: 0 },
     stats: { stitches: 0, buttons: 0, hops: 0, knots: 0, wins: 0, podiums: 0, bent: 0 },
     knots: { held: 1, tied: [] },
+    stitchStyle: 0,
     rivals: [],
     kit: createKit(),
     notionChoices: [],

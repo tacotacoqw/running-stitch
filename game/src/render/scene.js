@@ -6,6 +6,7 @@ import { CLOTH, INK, STITCH, VIEW } from '../config.js';
 import { scissorsAreShut, SCISSORS_CYCLE } from '../entities/hazards.js';
 import { paintCloth, paintTable, fabricPattern } from './fabric.js';
 import { seamPointAt } from '../core/seamPath.js';
+import { stitchStyleOf } from '../data/stitchStyles.js';
 import { LOCK_STITCH } from '../entities/lockStitch.js';
 import { FONT_STACK, paintText } from './paint.js';
 import { paintBobbin, paintButton, paintIron, paintNeedle, paintPin, paintRosette, paintScissors, paintSeamRipper } from './sprites.js';
@@ -77,7 +78,7 @@ function paintChalkLine(ctx, world) {
   ctx.moveTo(points[from].x, points[from].y);
   for (let i = from + 1; i < points.length; i += 2) ctx.lineTo(points[i].x, points[i].y);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.lineWidth = STITCH.goodWithin * 2 * world.kit.precision * world.rules.precision;
+  ctx.lineWidth = STITCH.goodWithin * 2 * world.kit.precision * world.rules.precision * stitchStyleOf(world).give;
   ctx.stroke();
   ctx.setLineDash([9, 8]);
   ctx.strokeStyle = 'rgba(40, 22, 10, 0.35)';
@@ -127,8 +128,23 @@ export function paintStitches(ctx, stitches, threadColor, width) {
   ctx.beginPath();
   for (const stitch of stitches) {
     if (stitch.ripped) continue;
-    ctx.moveTo(stitch.ax, stitch.ay);
-    ctx.lineTo(stitch.ax + (stitch.bx - stitch.ax) * 0.66, stitch.ay + (stitch.by - stitch.ay) * 0.66);
+    const dx = stitch.bx - stitch.ax;
+    const dy = stitch.by - stitch.ay;
+    if (stitch.style === 'zigzag') {
+      // A zigzag stitch: out to one side and back across the line.
+      ctx.moveTo(stitch.ax - dy * 0.3, stitch.ay + dx * 0.3);
+      ctx.lineTo(stitch.ax + dx * 0.5 + dy * 0.3, stitch.ay + dy * 0.5 - dx * 0.3);
+      ctx.lineTo(stitch.bx - dy * 0.3, stitch.by + dx * 0.3);
+    } else if (stitch.style === 'satin') {
+      // Satin stitches: short bars laid side by side across the line.
+      for (const along of [0.15, 0.5, 0.85]) {
+        ctx.moveTo(stitch.ax + dx * along - dy * 0.32, stitch.ay + dy * along + dx * 0.32);
+        ctx.lineTo(stitch.ax + dx * along + dy * 0.32, stitch.ay + dy * along - dx * 0.32);
+      }
+    } else {
+      ctx.moveTo(stitch.ax, stitch.ay);
+      ctx.lineTo(stitch.ax + dx * 0.66, stitch.ay + dy * 0.66);
+    }
   }
   ctx.strokeStyle = threadColor;
   ctx.lineWidth = width;

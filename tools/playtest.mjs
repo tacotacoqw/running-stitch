@@ -94,6 +94,12 @@ async function main() {
     await mouse('mouseReleased', 640, 400, 'left');
     check('holding the mouse button goes flat out', now.pedal === 'fast');
 
+    await tap('Digit3', '3');
+    await sleep(120);
+    check('3 switches to the satin stitch', (await page.evaluate('window.runningStitch.world.stitchStyle')) === 2);
+    await tap('Digit1', '1');
+    await sleep(120);
+
     const knotsBefore = await page.evaluate('window.runningStitch.world.knots.held');
     await tap('KeyE', 'e');
     await sleep(120);

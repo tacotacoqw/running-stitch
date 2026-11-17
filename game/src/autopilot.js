@@ -39,6 +39,8 @@ export function steerAutopilot(pilot, world) {
   }
   // Tie a lock stitch when the ripper is nearly on the needle.
   controls.knot = world.knots.held > 0 && ripperGap(world) < 70;
+  // Satin stitch on the straightest stretches, zigzag through the sharpest bends.
+  controls.style = bend < 0.1 ? 2 : bend > 0.75 ? 1 : 0;
   if (controls.brake) controls.fast = false;
   return controls;
 }

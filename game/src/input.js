@@ -63,6 +63,8 @@ export function createInput(canvas) {
         turn,
         fast: pointer.leftHeld || FAST_KEYS.some((code) => held.has(code)),
         brake: pointer.rightHeld || BRAKE_KEYS.some((code) => held.has(code)),
+        // 1, 2 and 3 switch the stitch style; -1 keeps the one in use.
+        style: pressed.has('Digit1') ? 0 : pressed.has('Digit2') ? 1 : pressed.has('Digit3') ? 2 : -1,
         hop: pressed.has('Space'),
         knot: pressed.has('KeyE') || pressed.has('ShiftLeft'),
       };

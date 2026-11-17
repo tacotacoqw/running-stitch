@@ -9,6 +9,7 @@ import { grandmasterResolve } from '../entities/seamRipper.js';
 import { ORDERS_IN_A_RUN, orderNumber } from '../systems/orderBook.js';
 import { chainMultiplier, neatnessOf, paceMultiplier, ribbonFor } from '../systems/scoring.js';
 import { formatScore, paintBar, paintKeycap, paintPaper, paintText, paintWrappedText } from './paint.js';
+import { STITCH_STYLES, stitchStyleOf } from '../data/stitchStyles.js';
 import { LOCK_STITCH } from '../entities/lockStitch.js';
 import { paintStandingsPanel } from './standingsPanel.js';
 import { paintBobbin, paintButton, paintIron, paintPin, paintRosette, paintScissors, paintSeamRipper } from './sprites.js';
@@ -165,16 +166,18 @@ function paintChainPanel(ctx, world) {
   paintText(ctx, `${Math.round(neatness * 100)}%`, LEFT.x + 14, top + 180, { size: 34, weight: 900 });
   paintRosette(ctx, LEFT.x + LEFT.width - 46, top + 158, 22, ribbonFor(neatness));
 
-  const chips = [['perfect', INK.teal], ['good', INK.mustard], ['sloppy', '#e07a2f'], ['off', INK.red]];
-  chips.forEach(([rating, color], index) => {
-    const x = LEFT.x + 14 + index * 49;
+  // The stitch in use and the two to switch to: keys 1, 2 and 3.
+  const inUse = stitchStyleOf(world);
+  STITCH_STYLES.forEach((style, index) => {
+    const x = LEFT.x + 14 + index * 65;
+    const on = style === inUse;
     ctx.beginPath();
-    ctx.roundRect(x, top + 196, 44, 34, 8);
-    ctx.fillStyle = color;
+    ctx.roundRect(x, top + 194, 61, 26, 8);
+    ctx.fillStyle = on ? INK.navy : 'rgba(58, 42, 32, 0.12)';
     ctx.fill();
-    paintText(ctx, `${world.tally[rating]}`, x + 22, top + 213, { size: 15, weight: 900, color: '#ffffff', align: 'center' });
-    paintText(ctx, rating, x + 22, top + 226, { size: 9, weight: 800, color: '#ffffff', align: 'center' });
+    paintText(ctx, `${style.key} ${style.name}`, x + 30.5, top + 212, { size: 10.5, weight: 900, color: on ? '#ffffff' : INK.textSoft, align: 'center' });
   });
+  paintText(ctx, inUse.text, LEFT.x + 14, top + 234, { size: 11, weight: 700, color: INK.textSoft });
 }
 
 function paintNotionsPanel(ctx, world) {
